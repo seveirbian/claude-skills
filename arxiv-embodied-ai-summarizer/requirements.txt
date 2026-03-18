@@ -1,0 +1,13 @@
+# Arxiv Embodied AI Summarizer - Dependencies
+# Claude Code Skill Requirements
+
+# Core dependencies
+requests>=2.28.0
+beautifulsoup4>=4.11.0
+PyMuPDF>=1.21.0
+Pillow>=9.0.0
+PyYAML>=6.0
+feedparser>=6.0.0
+
+# Translation services
+deep-translator>=1.11.0

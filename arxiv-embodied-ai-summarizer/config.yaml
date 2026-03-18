@@ -1,0 +1,225 @@
+# ArXiv Embodied AI Summarizer Configuration
+
+# ArXiv Search Configuration
+arxiv:
+  base_url: "http://export.arxiv.org/api/query"
+  search_categories:
+    - "cs.RO"  # Robotics
+    - "cs.AI"  # Artificial Intelligence
+  search_terms:
+    - "embodied"
+    - "embodied ai"
+    - "embodied intelligence"
+    - "robot learning"
+    - "manipulation"
+    - "mobile manipulation"
+    - "sim-to-real"
+    - "reinforcement learning"
+    - "imitation learning"
+    - "multimodal"
+    - "vision-language"
+  default_days_back: 2
+  default_max_results: 10
+  rate_limit_delay: 1.0
+
+# Senior Researchers in Embodied AI and Robotics
+senior_researchers:
+  # Stanford University
+  "Chelsea Finn": "Stanford University"
+  "Dorsa Sadigh": "Stanford University"
+  "Jiajun Wu": "Stanford University"
+  "Li Fei-Fei": "Stanford University"
+
+  # UC Berkeley
+  "Sergey Levine": "UC Berkeley"
+  "Pieter Abbeel": "UC Berkeley"
+  "Dan Klein": "UC Berkeley"
+  "Trevor Darrell": "UC Berkeley"
+
+  # CMU
+  "Deepak Pathak": "CMU"
+  "Katia Sycara": "CMU"
+  "Oliver Kroemer": "CMU"
+
+  # MIT
+  "Russ Tedrake": "MIT"
+  "Pulkit Agrawal": "MIT"
+  "Josh Tenenbaum": "MIT"
+
+  # Google DeepMind
+  "Andy Zeng": "Google DeepMind"
+  "Fei Xia": "Google DeepMind"
+  "Karol Hausman": "Google DeepMind"
+  "Ted Xiao": "Google DeepMind"
+  "Igor Mordatch": "Google DeepMind"
+  "Danny Driess": "Google DeepMind"
+  "Brian Ichter": "Google DeepMind"
+  "Jie Tan": "Google DeepMind"
+  "Vincent Vanhoucke": "Google DeepMind"
+  "Pete Florence": "Google DeepMind"
+  "Corey Lynch": "Google DeepMind"
+
+  # UT Austin
+  "Peter Stone": "UT Austin"
+  "Yuke Zhu": "UT Austin"
+  "Scott Niekum": "UT Austin"
+
+  # University of Washington
+  "Dieter Fox": "University of Washington"
+  "Maya Cakmak": "University of Washington"
+
+  # Columbia University
+  "Shuran Song": "Columbia University"
+  "Hod Lipson": "Columbia University"
+
+  # Other Institutions
+  "Franziska Meier": "Meta AI"
+  "Roberto Calandra": "Meta AI"
+  "Abhinav Gupta": "Meta AI"
+  "Lerrel Pinto": "NYU"
+  "Raia Hadsell": "Google DeepMind"
+  "Danijar Hafner": "Google DeepMind"
+  "Nitish Srivastava": "Google DeepMind"
+
+# Translation Configuration
+translation:
+  enabled: true
+  target_language: "zh-CN"  # Google Translator uses zh-CN for Chinese Simplified
+  chunk_size: 1000
+  services:
+    - "google"
+    - "microsoft"
+    - "mymemory"
+  retry_attempts: 3
+  delay_between_requests: 1.0
+
+  # Service-specific language mappings
+  language_mappings:
+    google: "zh-CN"      # Chinese (Simplified)
+    microsoft: "zh-Hans" # Microsoft uses zh-Hans
+    mymemory: "zh-CN"    # MyMemory uses zh-CN
+
+# PDF Processing Configuration
+pdf:
+  download:
+    timeout: 30
+    retry_attempts: 3
+    user_agent: "ArXiv-Summarizer-Bot/1.0"
+
+  image_extraction:
+    enabled: true
+    high_resolution: true
+    zoom_factor: 3.0
+    min_image_size: [80, 80]
+    architecture_focus: true
+
+    # Figure keywords for detection
+    figure_keywords:
+      high_value:
+        - "overview"
+        - "architecture"
+        - "framework"
+        - "pipeline"
+        - "workflow"
+        - "system design"
+        - "model architecture"
+        - "network structure"
+        - "approach"
+        - "method overview"
+        - "proposed method"
+
+      general:
+        - "figure"
+        - "fig"
+        - "diagram"
+        - "illustration"
+        - "structure"
+
+      negative:
+        - "experiment"
+        - "result"
+        - "performance"
+        - "comparison"
+        - "evaluation"
+        - "error"
+        - "accuracy"
+        - "precision"
+        - "recall"
+        - "score"
+        - "metric"
+        - "table"
+        - "chart"
+        - "graph"
+        - "plot"
+        - "curve"
+        - "distribution"
+        - "references"
+        - "acknowledgment"
+        - "bibliography"
+        - "appendix"
+
+# Analysis Configuration
+analysis:
+  paper:
+    extract_problem: true
+    extract_method: true
+    extract_highlights: true
+    max_summary_length: 2000
+
+  # Keywords for analysis
+  keywords:
+    problem_indicators:
+      - "problem"
+      - "challenge"
+      - "limitation"
+      - "difficulty"
+      - "issue"
+      - "bottleneck"
+
+    method_indicators:
+      - "approach"
+      - "method"
+      - "algorithm"
+      - "technique"
+      - "framework"
+      - "model"
+      - "architecture"
+
+    highlight_indicators:
+      - "novel"
+      - "new"
+      - "first"
+      - "significant"
+      - "improvement"
+      - "achieve"
+      - "outperform"
+      - "state-of-the-art"
+
+# Output Configuration
+output:
+  directory_pattern: "arxiv_embodied_ai_{timestamp}"
+  timestamp_format: "%Y%m%d_%H%M"
+
+  subdirectories:
+    papers: "papers"
+    summaries: "summaries"
+    images: "images"
+    translations: "translations"
+
+  file_naming:
+    paper_pattern: "{arxiv_id}.pdf"
+    summary_pattern: "{arxiv_id}_summary.md"
+    image_pattern: "{arxiv_id}_{type}_{index}.png"
+
+  formats:
+    summary: "markdown"
+    include_images: true
+    include_translations: true
+    chinese_summary: true
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_enabled: true
+  console_enabled: true

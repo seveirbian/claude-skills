@@ -1,0 +1,152 @@
+name: "arxiv-embodied-ai-summarizer"
+description: "智能Arxiv论文总结工具 - 专注于具身AI/机器人学习论文的自动化分析"
+version: "1.0.0"
+
+# Skill元信息
+meta:
+  author: "Seveir Bian"
+  category: "research-tools"
+  tags: ["arxiv", "ai", "robotics", "embodied-ai", "research", "pdf", "translation", "summarization"]
+  license: "Apache 2.0"
+
+# 功能描述
+capabilities:
+  - "从Arxiv自动下载最新的具身AI论文"
+  - "智能提取PDF中的架构图和关键图表"
+  - "生成中文总结和核心观点分析"
+  - "支持多语言翻译（深度学习术语优化）"
+  - "自动化文件组织和批量处理"
+  - "支持PDF截图和图像分析"
+
+# 依赖项
+dependencies:
+  python: ">=3.8"
+  packages:
+    - "requests"
+    - "beautifulsoup4"
+    - "PyMuPDF"
+    - "Pillow"
+    - "PyYAML"
+    - "feedparser"
+    - "deep-translator"
+
+# 主要文件
+files:
+  main: "main.py"
+  config: "config.yaml"
+  modules:
+    - "core/*.py"
+
+# 使用方法
+usage:
+  command: "python main.py"
+  examples:
+    - description: "下载并总结今日具身AI论文"
+      command: "python main.py"
+    - description: "设置搜索范围和数量"
+      command: "python main.py --days-back 3 --max-results 20"
+    - description: "只下载不总结"
+      command: "python main.py --download-only"
+    - description: "使用自定义配置文件"
+      command: "python main.py --config my_config.yaml"
+
+# 配置选项
+configuration:
+  arxiv:
+    search_query: "cat:cs.RO OR cat:cs.AI OR cat:cs.LG"
+    max_results: 10
+    days_back: 1
+
+  translation:
+    enabled: true
+    target_language: "zh"
+    fallback_services: ["google", "bing", "libre"]
+
+  image_extraction:
+    enabled: true
+    high_resolution: true
+    architecture_focus: true
+
+  output:
+    format: "markdown"
+    include_images: true
+    chinese_summary: true
+
+# 安装说明
+installation:
+  steps:
+    - "克隆或下载项目文件"
+    - "安装Python依赖: pip install -r requirements.txt"
+    - "可选: 修改config.yaml配置文件"
+    - "运行: python main.py"
+
+# 特殊功能
+features:
+  pdf_processing:
+    description: "高级PDF处理和图像提取"
+    capabilities:
+      - "智能架构图检测"
+      - "精准图表区域截图"
+      - "多组件图表组合"
+      - "文字区域过滤"
+
+  ai_analysis:
+    description: "AI论文专业分析"
+    capabilities:
+      - "具身AI术语识别"
+      - "技术方法提取"
+      - "创新点总结"
+      - "相关工作分析"
+
+  automation:
+    description: "全自动化工作流"
+    capabilities:
+      - "定时任务支持"
+      - "批量文件处理"
+      - "智能文件组织"
+      - "增量更新模式"
+
+# 输出格式
+output_structure:
+  papers_directory: "arxiv_embodied_ai_YYYYMMDD_HHMM/"
+  subdirectories:
+    - "papers/": "原始PDF文件"
+    - "summaries/": "中文总结文档"
+    - "images/": "提取的架构图"
+    - "translations/": "翻译文件"
+
+  summary_format: "markdown"
+  image_format: "png"
+  naming_convention: "{arxiv_id}_{title_short}"
+
+# API接口（如果作为服务运行）
+api:
+  endpoints:
+    - "/summarize": "总结指定论文"
+    - "/download": "下载最新论文"
+    - "/extract-images": "提取PDF图像"
+    - "/translate": "翻译文本"
+
+  response_format: "json"
+  error_handling: "detailed"
+
+# 扩展性
+extensibility:
+  plugin_support: true
+  custom_analyzers: true
+  additional_sources: true
+  export_formats: ["json", "yaml", "pdf", "html"]
+
+# 性能优化
+performance:
+  parallel_processing: true
+  cache_enabled: true
+  memory_optimization: true
+  rate_limiting: true
+
+# 错误处理
+error_handling:
+  retry_mechanism: true
+  fallback_services: true
+  graceful_degradation: true
+  detailed_logging: true
