@@ -19,67 +19,54 @@ arxiv:
     - "multimodal"
     - "vision-language"
   default_days_back: 2
-  default_max_results: 10
+  default_max_results: 50
   rate_limit_delay: 1.0
 
-# Senior Researchers in Embodied AI and Robotics
+# Senior Researchers in Embodied AI and Robotics (2024 Updated)
 senior_researchers:
-  # Stanford University
-  "Chelsea Finn": "Stanford University"
-  "Dorsa Sadigh": "Stanford University"
-  "Jiajun Wu": "Stanford University"
-  "Li Fei-Fei": "Stanford University"
+  # === 学术界顶尖研究者 ===
 
-  # UC Berkeley
-  "Sergey Levine": "UC Berkeley"
-  "Pieter Abbeel": "UC Berkeley"
-  "Dan Klein": "UC Berkeley"
-  "Trevor Darrell": "UC Berkeley"
+  # Stanford University - 机器人学习先驱
+  "Chelsea Finn": "Stanford University"        # Few-shot learning, Meta-learning
+  "Jiajun Wu": "Stanford University"           # 3D Vision, Physics Simulation
+  "Li Fei-Fei": "Stanford University"          # Computer Vision, AI Ethics
 
-  # CMU
-  "Deepak Pathak": "CMU"
-  "Katia Sycara": "CMU"
-  "Oliver Kroemer": "CMU"
+  # UC Berkeley - 深度强化学习重镇
+  "Sergey Levine": "UC Berkeley"               # Deep RL, Robot Learning
 
-  # MIT
-  "Russ Tedrake": "MIT"
-  "Pulkit Agrawal": "MIT"
-  "Josh Tenenbaum": "MIT"
+  # CMU - 机器人技术领导者
+  "Deepak Pathak": "CMU"                       # Curiosity-driven Learning
+  "Abhinav Gupta": "CMU"                       # Visual Learning
 
-  # Google DeepMind
-  "Andy Zeng": "Google DeepMind"
-  "Fei Xia": "Google DeepMind"
-  "Karol Hausman": "Google DeepMind"
-  "Ted Xiao": "Google DeepMind"
-  "Igor Mordatch": "Google DeepMind"
-  "Danny Driess": "Google DeepMind"
-  "Brian Ichter": "Google DeepMind"
-  "Jie Tan": "Google DeepMind"
-  "Vincent Vanhoucke": "Google DeepMind"
-  "Pete Florence": "Google DeepMind"
-  "Corey Lynch": "Google DeepMind"
+  # UT Austin - 机器人规划专家
+  "Yuke Zhu": "UT Austin"                      # Embodied AI, Manipulation
 
-  # UT Austin
-  "Peter Stone": "UT Austin"
-  "Yuke Zhu": "UT Austin"
-  "Scott Niekum": "UT Austin"
+  # University of Washington - 感知与导航
+  "Dieter Fox": "University of Washington"     # SLAM, Mobile Robotics
 
-  # University of Washington
-  "Dieter Fox": "University of Washington"
-  "Maya Cakmak": "University of Washington"
+  # Columbia & NYU - 操作与学习
+  "Shuran Song": "Columbia University"         # 3D Vision, Manipulation
 
-  # Columbia University
-  "Shuran Song": "Columbia University"
-  "Hod Lipson": "Columbia University"
+  # Other Top Universities
 
-  # Other Institutions
-  "Franziska Meier": "Meta AI"
-  "Roberto Calandra": "Meta AI"
-  "Abhinav Gupta": "Meta AI"
-  "Lerrel Pinto": "NYU"
-  "Raia Hadsell": "Google DeepMind"
-  "Danijar Hafner": "Google DeepMind"
-  "Nitish Srivastava": "Google DeepMind"
+  # === 产业界领军人物 ===
+
+  # Google DeepMind - 具身AI先锋
+  "Andy Zeng": "Google DeepMind"               # RT-1/RT-2 机器人大模型
+  "Fei Xia": "Google DeepMind"                 # Embodied AI, Simulation
+  "Jie Tan": "Google DeepMind"                 # Sim-to-Real Transfer
+
+  # NVIDIA - AI计算与仿真
+  "Jim Fan": "NVIDIA"                          # Foundation Models, MineDojo
+  "Yuke Zhu": "NVIDIA Research"               # (兼职) Isaac Sim
+
+  # Tesla - 自动驾驶与具身智能
+  "Andrej Karpathy": "Former Tesla"            # Computer Vision Director (前)
+
+  # === 中国具身AI领域重要研究者 ===
+  "Cewu Lu": "Shanghai Jiao Tong University"  # 机器人感知与操作
+  "He Wang": "Peking University"              # 机器人学习、强化学习
+  "Shanghang Zhang": "Peking University"      # 深度强化学习、机器人控制
 
 # Translation Configuration
 translation:
