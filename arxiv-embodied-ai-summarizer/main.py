@@ -6,6 +6,7 @@ Refactored modular version with YAML configuration
 
 import argparse
 import sys
+from pathlib import Path
 from typing import List, Dict, Any
 
 from core.arxiv_client import ArXivClient
@@ -13,6 +14,7 @@ from core.translator import TranslationService
 from core.pdf_processor import PDFProcessor
 from core.analyzer import PaperAnalyzer
 from core.output_manager import OutputManager
+from core.claude_analyzer import ClaudeAnalyzer
 
 
 class ArXivSummarizer:
@@ -25,6 +27,7 @@ class ArXivSummarizer:
         self.pdf_processor = PDFProcessor()
         self.analyzer = PaperAnalyzer()
         self.output_manager = OutputManager()
+        self.claude_analyzer = ClaudeAnalyzer()
 
     def run(self, days_back: int = None, max_results: int = None,
             output_dir: str = None, download_only: bool = False,
@@ -108,7 +111,22 @@ class ArXivSummarizer:
                 researchers_str = ', '.join([name for name, _ in senior])
                 print(f"  ⭐️ Senior researchers found in '{paper['title'][:50]}...': {researchers_str}")
 
-        # Step 4: Extract images
+        # Step 4: Claude AI deep analysis (replaces/augments basic translation)
+        from core.config import config as cfg
+        if self.claude_analyzer.enabled:
+            print("\n🤖 Running Claude AI deep analysis...")
+            analyses_dir = str(Path(output_dir) / cfg.get('claude.analyses_subdir', 'analyses'))
+            claude_analyses = self.claude_analyzer.analyze_papers_batch(papers, analyses_dir)
+            # Attach Claude analysis results to paper dicts for downstream use
+            for paper in papers:
+                arxiv_id = paper.get('id', '')
+                if arxiv_id in claude_analyses:
+                    paper['claude_analysis'] = claude_analyses[arxiv_id]
+            print(f"  ✅ Claude analysis complete for {len(claude_analyses)}/{len(papers)} papers")
+        else:
+            print("\n⚠️  Claude AI analysis skipped (set ANTHROPIC_API_KEY to enable)")
+
+        # Step 5: Extract images
         print("\n🖼️  Extracting images...")
         images_dir = self.output_manager.get_images_dir(output_dir)
 
@@ -124,13 +142,15 @@ class ArXivSummarizer:
                 except Exception as e:
                     print(f"  ❌ Failed to extract images from {paper['id']}: {e}")
 
-        # Step 5: Translate summaries first
+        # Step 6: Translate summaries (fallback when Claude is unavailable)
         from core.config import config
-        if config.get('translation.enabled', True):
-            print("\n🌐 Translating content...")
+        if config.get('translation.enabled', True) and not self.claude_analyzer.enabled:
+            print("\n🌐 Translating content (fallback mode)...")
             self._translate_summaries(papers, analyses, output_dir)
+        elif self.claude_analyzer.enabled:
+            print("\n✅ Claude analysis used for translations (skipping external translation)")
 
-        # Step 6: Generate summary (after translations are available)
+        # Step 7: Generate summary (after translations/analysis are available)
         print("\n📝 Generating summary...")
         summary_path = self.output_manager.generate_summary(
             papers, analyses, top_tier_researchers_list, senior_researchers_list, output_dir

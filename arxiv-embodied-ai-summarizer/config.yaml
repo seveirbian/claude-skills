@@ -189,6 +189,15 @@ output:
     include_translations: true
     chinese_summary: true
 
+# Claude AI Analysis Configuration
+# 需要设置环境变量 ANTHROPIC_API_KEY
+claude:
+  model: "claude-opus-4-6"    # 使用最强模型进行深度分析
+  max_tokens: 2048
+  enabled: true               # 自动检测 ANTHROPIC_API_KEY，未设置时自动降级
+  # 分析结果缓存目录（避免重复调用 API）
+  analyses_subdir: "analyses"
+
 # Logging Configuration
 logging:
   level: "INFO"

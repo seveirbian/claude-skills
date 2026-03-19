@@ -35,6 +35,8 @@ dependencies = [
     "aiofiles>=0.8.0",
     # Translation services
     "deep-translator>=1.11.0",
+    # Claude AI analysis (requires ANTHROPIC_API_KEY env var)
+    "anthropic>=0.40.0",
 ]
 
 [project.urls]

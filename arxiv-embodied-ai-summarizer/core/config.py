@@ -78,6 +78,10 @@ class Config:
         """Get output configuration."""
         return self.get('output', {})
 
+    def get_claude_config(self) -> Dict[str, Any]:
+        """Get Claude AI analysis configuration."""
+        return self.get('claude', {})
+
 
 # Global configuration instance
 config = Config()

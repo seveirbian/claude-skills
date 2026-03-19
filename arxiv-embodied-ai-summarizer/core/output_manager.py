@@ -1,9 +1,10 @@
 """Output management module."""
 
 import os
+import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 
 from .config import config
 
@@ -174,24 +175,27 @@ class OutputManager:
                     ""
                 ])
 
-            # Add translated abstract
-            translation_file = Path(output_dir) / "translations" / f"{arxiv_id}_translation.txt"
-            if translation_file.exists():
-                try:
-                    with open(translation_file, 'r', encoding='utf-8') as f:
-                        translation_content = f.read().strip()
-
-                    # Extract Chinese abstract from translation file
-                    if "摘要:" in translation_content:
-                        chinese_abstract = translation_content.split("摘要:")[1].strip()
-                        summary_lines.extend([
-                            "#### 🌐 中文摘要",
-                            "",
-                            chinese_abstract,
-                            ""
-                        ])
-                except Exception as e:
-                    print(f"Failed to read translation for {arxiv_id}: {e}")
+            # Add Claude AI analysis or fallback translation
+            claude_analysis = paper.get('claude_analysis') or self._load_claude_analysis(arxiv_id, output_dir)
+            if claude_analysis:
+                self._append_claude_analysis(summary_lines, claude_analysis)
+            else:
+                # Fallback: read from translation file
+                translation_file = Path(output_dir) / "translations" / f"{arxiv_id}_translation.txt"
+                if translation_file.exists():
+                    try:
+                        with open(translation_file, 'r', encoding='utf-8') as f:
+                            translation_content = f.read().strip()
+                        if "摘要:" in translation_content:
+                            chinese_abstract = translation_content.split("摘要:")[1].strip()
+                            summary_lines.extend([
+                                "#### 🌐 中文摘要",
+                                "",
+                                chinese_abstract,
+                                ""
+                            ])
+                    except Exception as e:
+                        print(f"Failed to read translation for {arxiv_id}: {e}")
 
             # Add core architecture section with images
             if include_images:
@@ -267,6 +271,61 @@ class OutputManager:
         """Get translations subdirectory path."""
         subdir = self.output_config.get('subdirectories.translations', 'translations')
         return str(Path(output_dir) / subdir)
+
+    def _load_claude_analysis(self, arxiv_id: str, output_dir: str) -> Optional[Dict]:
+        """Load Claude analysis from disk if it exists."""
+        analyses_subdir = config.get('claude.analyses_subdir', 'analyses')
+        analysis_file = Path(output_dir) / analyses_subdir / f"{arxiv_id}_analysis.json"
+        if analysis_file.exists():
+            try:
+                with open(analysis_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return None
+
+    def _append_claude_analysis(self, lines: List[str], analysis: Dict, heading_level: str = "####"):
+        """Append Claude AI analysis sections to summary lines."""
+        h = heading_level
+        sub = "#" + h  # one level deeper
+
+        # Chinese title if available
+        title_zh = analysis.get('title_zh', '')
+        if title_zh:
+            lines.extend([f"{h} 📌 {title_zh}", ""])
+
+        # Chinese abstract
+        abstract_zh = analysis.get('abstract_zh', '')
+        if abstract_zh:
+            lines.extend([f"{h} 🌐 中文摘要", "", abstract_zh, ""])
+
+        # Structured analysis
+        sections = [
+            ('core_problem', '🎯 核心问题'),
+            ('method', '⚙️ 技术方法'),
+            ('contribution', '💡 主要贡献'),
+            ('experiment_highlights', '📊 实验亮点'),
+            ('significance', '🌟 领域意义'),
+        ]
+        has_analysis = any(analysis.get(k) for k, _ in sections)
+        if has_analysis:
+            lines.extend([f"{h} 🤖 AI 深度解析", ""])
+            for key, label in sections:
+                value = analysis.get(key, '')
+                if value:
+                    lines.extend([f"**{label}**：{value}", ""])
+
+        # Keywords
+        keywords = analysis.get('keywords_zh', [])
+        if keywords:
+            kw_str = ' · '.join([f"`{kw}`" for kw in keywords])
+            lines.extend([f"**🏷️ 关键词**：{kw_str}", ""])
+
+        # Relevance score
+        score = analysis.get('relevance_score')
+        if score is not None:
+            stars = '⭐' * min(int(score), 10)
+            lines.extend([f"**📈 具身AI相关度**：{score}/10 {stars}", ""])
 
     def _highlight_famous_researchers(self, all_authors: List[str],
                                      top_tier_found: List[Tuple[str, str]],
@@ -366,23 +425,26 @@ class OutputManager:
                     ""
                 ])
 
-            # Add Chinese translation
-            translation_file = Path(output_dir) / "translations" / f"{arxiv_id}_translation.txt"
-            if translation_file.exists():
-                try:
-                    with open(translation_file, 'r', encoding='utf-8') as f:
-                        translation_content = f.read().strip()
-
-                    if "摘要:" in translation_content:
-                        chinese_abstract = translation_content.split("摘要:")[1].strip()
-                        summary_lines.extend([
-                            "## 🌐 中文摘要",
-                            "",
-                            chinese_abstract,
-                            ""
-                        ])
-                except Exception as e:
-                    print(f"Warning: Failed to read translation for {arxiv_id}: {e}")
+            # Add Claude AI analysis or fallback translation
+            claude_analysis = paper.get('claude_analysis') or self._load_claude_analysis(arxiv_id, output_dir)
+            if claude_analysis:
+                self._append_claude_analysis(summary_lines, claude_analysis, heading_level="##")
+            else:
+                translation_file = Path(output_dir) / "translations" / f"{arxiv_id}_translation.txt"
+                if translation_file.exists():
+                    try:
+                        with open(translation_file, 'r', encoding='utf-8') as f:
+                            translation_content = f.read().strip()
+                        if "摘要:" in translation_content:
+                            chinese_abstract = translation_content.split("摘要:")[1].strip()
+                            summary_lines.extend([
+                                "## 🌐 中文摘要",
+                                "",
+                                chinese_abstract,
+                                ""
+                            ])
+                    except Exception as e:
+                        print(f"Warning: Failed to read translation for {arxiv_id}: {e}")
 
             # Add images section
             include_images = self.output_config.get('formats.include_images', True)

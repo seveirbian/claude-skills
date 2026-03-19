@@ -1,6 +1,6 @@
 name: "arxiv-embodied-ai-summarizer"
 description: "智能Arxiv论文总结工具 - 专注于具身AI/机器人学习论文的自动化分析"
-version: "1.0.0"
+version: "2.0.0"
 
 # Skill元信息
 meta:
@@ -13,10 +13,11 @@ meta:
 capabilities:
   - "从Arxiv自动下载最新的具身AI论文"
   - "智能提取PDF中的架构图和关键图表"
-  - "生成中文总结和核心观点分析"
-  - "支持多语言翻译（深度学习术语优化）"
+  - "🤖 Claude AI深度分析：中文翻译+核心问题+技术方法+贡献+相关度评分"
+  - "支持多语言翻译（Claude优先，外部服务兜底）"
   - "自动化文件组织和批量处理"
   - "支持PDF截图和图像分析"
+  - "分析结果缓存，避免重复API调用"
 
 # 依赖项
 dependencies:
@@ -29,6 +30,7 @@ dependencies:
     - "PyYAML"
     - "feedparser"
     - "deep-translator"
+    - "anthropic"  # Claude AI analysis (requires ANTHROPIC_API_KEY)
 
 # 主要文件
 files:
