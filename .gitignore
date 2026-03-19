@@ -134,3 +134,6 @@ Desktop.ini
 arxiv_embodied_ai_*/
 test_downloads/
 *.tmp
+
+# UV specific
+.python-version

@@ -39,18 +39,21 @@ files:
 
 # 使用方法
 usage:
-  command: "python main.py"
+  recommended_command: "uv run python main.py"
+  traditional_command: "python main.py"
   examples:
-    - description: "下载并总结今日具身AI论文"
-      command: "python main.py"
+    - description: "下载并总结今日具身AI论文 (推荐使用uv)"
+      command: "uv run python main.py"
     - description: "设置搜索范围和数量"
-      command: "python main.py --days-back 3 --max-results 20"
+      command: "uv run python main.py --days-back 3 --max-results 20"
     - description: "只下载不总结"
-      command: "python main.py --download-only"
+      command: "uv run python main.py --download-only"
     - description: "使用自定义配置文件"
-      command: "python main.py --config my_config.yaml"
+      command: "uv run python main.py --config my_config.yaml"
     - description: "使用并发下载（10个并发）"
-      command: "python main.py --concurrent-downloads 10"
+      command: "uv run python main.py --concurrent-downloads 10"
+    - description: "传统方式运行"
+      command: "python main.py"
 
 # 配置选项
 configuration:
@@ -76,7 +79,13 @@ configuration:
 
 # 安装说明
 installation:
-  steps:
+  recommended_method: "uv"
+  uv_steps:
+    - "安装uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
+    - "克隆或下载项目文件"
+    - "初始化环境: uv sync"
+    - "运行: uv run python main.py"
+  traditional_steps:
     - "克隆或下载项目文件"
     - "安装Python依赖: pip install -r requirements.txt"
     - "可选: 修改config.yaml配置文件"
