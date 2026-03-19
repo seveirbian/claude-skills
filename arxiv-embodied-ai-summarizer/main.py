@@ -88,6 +88,7 @@ class ArXivSummarizer:
         # Step 3: Analyze papers
         print("\n🔍 Analyzing papers...")
         analyses = []
+        top_tier_researchers_list = []
         senior_researchers_list = []
 
         for paper in papers:
@@ -95,13 +96,17 @@ class ArXivSummarizer:
             analysis = self.analyzer.analyze_paper(paper)
             analyses.append(analysis)
 
-            # Identify senior researchers
-            senior_researchers = self.analyzer.identify_senior_researchers(paper.get('authors', []))
-            senior_researchers_list.append(senior_researchers)
+            # Identify senior researchers with tier classification
+            top_tier, senior = self.analyzer.identify_senior_researchers(paper.get('authors', []))
+            top_tier_researchers_list.append(top_tier)
+            senior_researchers_list.append(senior)
 
-            if senior_researchers:
-                researchers_str = ', '.join([name for name, _ in senior_researchers])
-                print(f"  🌟 Senior researchers found in '{paper['title'][:50]}...': {researchers_str}")
+            if top_tier:
+                researchers_str = ', '.join([name for name, _ in top_tier])
+                print(f"  🌟 Top tier researchers found in '{paper['title'][:50]}...': {researchers_str}")
+            if senior:
+                researchers_str = ', '.join([name for name, _ in senior])
+                print(f"  ⭐️ Senior researchers found in '{paper['title'][:50]}...': {researchers_str}")
 
         # Step 4: Extract images
         print("\n🖼️  Extracting images...")
@@ -128,7 +133,7 @@ class ArXivSummarizer:
         # Step 6: Generate summary (after translations are available)
         print("\n📝 Generating summary...")
         summary_path = self.output_manager.generate_summary(
-            papers, analyses, senior_researchers_list, output_dir
+            papers, analyses, top_tier_researchers_list, senior_researchers_list, output_dir
         )
 
         print(f"\n🎉 Completed! Output saved to: {output_dir}")

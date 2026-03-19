@@ -54,6 +54,10 @@ class Config:
         """Get senior researchers mapping."""
         return self.get('senior_researchers', {})
 
+    def get_top_tier_researchers(self) -> Dict[str, str]:
+        """Get top tier researchers mapping."""
+        return self.get('top_tier_researchers', {})
+
     def get_arxiv_config(self) -> Dict[str, Any]:
         """Get ArXiv search configuration."""
         return self.get('arxiv', {})

@@ -15,6 +15,7 @@ class PaperAnalyzer:
         self.paper_config = self.analysis_config.get('paper', {})
         self.keywords = self.analysis_config.get('keywords', {})
         self.senior_researchers = config.get_senior_researchers()
+        self.top_tier_researchers = config.get_top_tier_researchers()
 
     def analyze_paper(self, paper: Dict[str, Any]) -> Dict[str, str]:
         """Analyze a paper and extract key information.
@@ -41,24 +42,32 @@ class PaperAnalyzer:
 
         return analysis
 
-    def identify_senior_researchers(self, authors: List[str]) -> List[Tuple[str, str]]:
-        """Identify senior researchers from author list.
+    def identify_senior_researchers(self, authors: List[str]) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+        """Identify senior researchers from author list with tier classification.
 
         Args:
             authors: List of author names
 
         Returns:
-            List of (author, affiliation) tuples for senior researchers
+            Tuple of (top_tier_authors, senior_authors) - each as list of (author, affiliation) tuples
         """
+        top_tier_authors = []
         senior_authors = []
 
         for author in authors:
-            for senior_name, affiliation in self.senior_researchers.items():
-                if self._name_match(author, senior_name):
-                    senior_authors.append((senior_name, affiliation))
+            # Check top tier first
+            for top_name, affiliation in self.top_tier_researchers.items():
+                if self._name_match(author, top_name):
+                    top_tier_authors.append((top_name, affiliation))
                     break
+            else:
+                # If not in top tier, check senior researchers
+                for senior_name, affiliation in self.senior_researchers.items():
+                    if self._name_match(author, senior_name):
+                        senior_authors.append((senior_name, affiliation))
+                        break
 
-        return senior_authors
+        return top_tier_authors, senior_authors
 
     def _name_match(self, author: str, senior_name: str) -> bool:
         """Check if author name matches senior researcher name."""

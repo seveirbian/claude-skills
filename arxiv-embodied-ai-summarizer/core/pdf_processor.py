@@ -76,7 +76,7 @@ class PDFProcessor:
 
     async def download_pdf_async(self, session: aiohttp.ClientSession, paper: Dict,
                                 output_dir: str, semaphore: asyncio.Semaphore) -> Optional[str]:
-        """Download PDF asynchronously from ArXiv.
+        """Download PDF asynchronously from ArXiv with enhanced error handling.
 
         Args:
             session: aiohttp client session
@@ -93,52 +93,131 @@ class PDFProcessor:
             file_path = os.path.join(output_dir, filename)
 
             if os.path.exists(file_path):
-                print(f"PDF already exists: {filename}")
-                return file_path
+                # Verify existing file is valid
+                try:
+                    if os.path.getsize(file_path) > 1024:  # At least 1KB
+                        print(f"PDF already exists: {filename}")
+                        return file_path
+                    else:
+                        print(f"Existing PDF too small, re-downloading: {filename}")
+                        os.remove(file_path)
+                except:
+                    print(f"Corrupted PDF detected, re-downloading: {filename}")
+                    os.remove(file_path)
 
+            # Enhanced headers to avoid blocking
             headers = {
-                'User-Agent': self.download_config.get('user_agent', 'ArXiv-Summarizer-Bot/1.0')
+                'User-Agent': self.download_config.get('user_agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'),
+                'Accept': 'application/pdf,application/octet-stream,*/*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
             }
 
-            timeout = aiohttp.ClientTimeout(total=self.download_config.get('timeout', 30))
+            timeout = aiohttp.ClientTimeout(
+                total=self.download_config.get('timeout', 45),  # Increased timeout
+                connect=10,
+                sock_read=30
+            )
             retry_attempts = self.download_config.get('retry_attempts', 3)
             rate_limit_delay = self.download_config.get('rate_limit_delay', 0.5)
 
+            # Try multiple URL formats if the first fails
+            url_variants = [
+                pdf_url,
+                pdf_url.replace('http://', 'https://'),  # Force HTTPS
+                f"https://arxiv.org/pdf/{paper['id']}.pdf",  # Direct arXiv URL
+                f"https://export.arxiv.org/pdf/{paper['id']}.pdf"  # Export mirror
+            ]
+
             for attempt in range(retry_attempts):
-                try:
-                    print(f"📥 Downloading PDF: {filename} (attempt {attempt + 1})")
+                for url_idx, current_url in enumerate(url_variants):
+                    try:
+                        url_info = f" (URL variant {url_idx + 1})" if url_idx > 0 else ""
+                        print(f"📥 Downloading PDF: {filename} (attempt {attempt + 1}{url_info})")
 
-                    async with session.get(pdf_url, headers=headers, timeout=timeout) as response:
-                        response.raise_for_status()
+                        async with session.get(current_url, headers=headers, timeout=timeout,
+                                             allow_redirects=True, max_redirects=5) as response:
 
-                        # Create temporary file path to avoid partial downloads
+                            # Handle different response codes
+                            if response.status == 200:
+                                # Check content type
+                                content_type = response.headers.get('content-type', '').lower()
+                                if 'pdf' not in content_type and 'application/octet-stream' not in content_type:
+                                    if url_idx < len(url_variants) - 1:
+                                        continue  # Try next URL variant
+                                    else:
+                                        raise Exception(f"Invalid content type: {content_type}")
+
+                                # Create temporary file path
+                                temp_file_path = f"{file_path}.tmp"
+
+                                # Download with progress tracking
+                                total_size = int(response.headers.get('content-length', 0))
+                                downloaded_size = 0
+
+                                async with aiofiles.open(temp_file_path, 'wb') as f:
+                                    chunk_size = self.download_config.get('chunk_size', 8192)
+                                    async for chunk in response.content.iter_chunked(chunk_size):
+                                        await f.write(chunk)
+                                        downloaded_size += len(chunk)
+
+                                # Verify download completeness
+                                if total_size > 0 and downloaded_size < total_size * 0.95:
+                                    os.remove(temp_file_path)
+                                    raise Exception(f"Incomplete download: {downloaded_size}/{total_size} bytes")
+
+                                # Verify file is not too small (likely error page)
+                                if downloaded_size < 10240:  # 10KB minimum
+                                    os.remove(temp_file_path)
+                                    if url_idx < len(url_variants) - 1:
+                                        continue  # Try next URL variant
+                                    else:
+                                        raise Exception(f"Downloaded file too small: {downloaded_size} bytes")
+
+                                # Rename temp file to final file
+                                os.rename(temp_file_path, file_path)
+
+                                print(f"✅ Downloaded: {filename} ({downloaded_size:,} bytes)")
+
+                                # Rate limiting between successful downloads
+                                if rate_limit_delay > 0:
+                                    await asyncio.sleep(rate_limit_delay)
+
+                                return file_path
+
+                            elif response.status == 429:  # Rate limited
+                                print(f"⏱️  Rate limited, waiting longer...")
+                                await asyncio.sleep(10)  # Wait 10 seconds for rate limit
+                                continue
+
+                            elif response.status in [503, 502, 504]:  # Service unavailable
+                                print(f"🔧 Server error {response.status}, trying next variant...")
+                                continue
+
+                            else:
+                                response.raise_for_status()
+
+                    except asyncio.TimeoutError:
+                        print(f"⏰ Timeout downloading {filename} with URL variant {url_idx + 1}")
+                        continue
+                    except aiohttp.ClientError as e:
+                        print(f"🌐 Network error for {filename}: {e}")
+                        continue
+                    except Exception as e:
+                        print(f"❌ Download attempt failed for {filename}: {e}")
+                        # Clean up temp file if it exists
                         temp_file_path = f"{file_path}.tmp"
+                        if os.path.exists(temp_file_path):
+                            os.remove(temp_file_path)
+                        continue
 
-                        async with aiofiles.open(temp_file_path, 'wb') as f:
-                            chunk_size = self.download_config.get('chunk_size', 8192)
-                            async for chunk in response.content.iter_chunked(chunk_size):
-                                await f.write(chunk)
-
-                        # Rename temp file to final file
-                        os.rename(temp_file_path, file_path)
-
-                        print(f"✅ Downloaded: {filename}")
-
-                        # Rate limiting between downloads
-                        if rate_limit_delay > 0:
-                            await asyncio.sleep(rate_limit_delay)
-
-                        return file_path
-
-                except Exception as e:
-                    print(f"❌ Download attempt {attempt + 1} failed for {filename}: {e}")
-                    # Clean up temp file if it exists
-                    temp_file_path = f"{file_path}.tmp"
-                    if os.path.exists(temp_file_path):
-                        os.remove(temp_file_path)
-
-                    if attempt < retry_attempts - 1:
-                        await asyncio.sleep(2)  # Wait before retry
+                # Wait between retry attempts
+                if attempt < retry_attempts - 1:
+                    wait_time = min(2 ** attempt, 10)  # Exponential backoff, max 10s
+                    print(f"⏳ Waiting {wait_time}s before retry...")
+                    await asyncio.sleep(wait_time)
 
             print(f"❌ All download attempts failed for {filename}")
             return None

@@ -18,49 +18,30 @@ arxiv:
     - "imitation learning"
     - "multimodal"
     - "vision-language"
-  default_days_back: 2
+  default_days_back: 1
   default_max_results: 50
   rate_limit_delay: 1.0
 
 # Senior Researchers in Embodied AI and Robotics (2024 Updated)
+# 研究者层级分类：顶尖学者具有国际领导地位，重要学者在特定领域有显著贡献
+top_tier_researchers:
+  # === 国际顶尖研究者 (🌟 标记) ===
+  "Chelsea Finn": "Stanford University"        # Few-shot learning, Meta-learning 领军者
+  "Sergey Levine": "UC Berkeley"               # Deep RL, Robot Learning 奠基人
+  "Jiajun Wu": "Stanford University"           # 3D Vision, Physics Simulation 新星
+  "Andy Zeng": "Google DeepMind"               # RT-1/RT-2 机器人大模型先驱
+  "Deepak Pathak": "CMU"                       # Curiosity-driven Learning 开创者
+  "Yuke Zhu": "UT Austin"                      # Embodied AI, Manipulation 专家
+  "Dieter Fox": "University of Washington"     # SLAM, Mobile Robotics 权威
+  "Shuran Song": "Columbia University"         # 3D Vision, Manipulation 领军者
+  "Fei Xia": "Google DeepMind"                 # Embodied AI, Simulation 专家
+  "Jim Fan": "NVIDIA"                          # Foundation Models, MineDojo 创新者
+
 senior_researchers:
-  # === 学术界顶尖研究者 ===
-
-  # Stanford University - 机器人学习先驱
-  "Chelsea Finn": "Stanford University"        # Few-shot learning, Meta-learning
-  "Jiajun Wu": "Stanford University"           # 3D Vision, Physics Simulation
+  # === 重要学术研究者 ===
   "Li Fei-Fei": "Stanford University"          # Computer Vision, AI Ethics
-
-  # UC Berkeley - 深度强化学习重镇
-  "Sergey Levine": "UC Berkeley"               # Deep RL, Robot Learning
-
-  # CMU - 机器人技术领导者
-  "Deepak Pathak": "CMU"                       # Curiosity-driven Learning
   "Abhinav Gupta": "CMU"                       # Visual Learning
-
-  # UT Austin - 机器人规划专家
-  "Yuke Zhu": "UT Austin"                      # Embodied AI, Manipulation
-
-  # University of Washington - 感知与导航
-  "Dieter Fox": "University of Washington"     # SLAM, Mobile Robotics
-
-  # Columbia & NYU - 操作与学习
-  "Shuran Song": "Columbia University"         # 3D Vision, Manipulation
-
-  # Other Top Universities
-
-  # === 产业界领军人物 ===
-
-  # Google DeepMind - 具身AI先锋
-  "Andy Zeng": "Google DeepMind"               # RT-1/RT-2 机器人大模型
-  "Fei Xia": "Google DeepMind"                 # Embodied AI, Simulation
   "Jie Tan": "Google DeepMind"                 # Sim-to-Real Transfer
-
-  # NVIDIA - AI计算与仿真
-  "Jim Fan": "NVIDIA"                          # Foundation Models, MineDojo
-  "Yuke Zhu": "NVIDIA Research"               # (兼职) Isaac Sim
-
-  # Tesla - 自动驾驶与具身智能
   "Andrej Karpathy": "Former Tesla"            # Computer Vision Director (前)
 
   # === 中国具身AI领域重要研究者 ===
