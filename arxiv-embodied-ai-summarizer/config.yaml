@@ -105,6 +105,10 @@ pdf:
     timeout: 30
     retry_attempts: 3
     user_agent: "ArXiv-Summarizer-Bot/1.0"
+    # Concurrent download settings
+    max_concurrent_downloads: 5
+    rate_limit_delay: 0.5  # seconds between downloads per worker
+    chunk_size: 8192
 
   image_extraction:
     enabled: true

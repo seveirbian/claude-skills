@@ -9,5 +9,9 @@ Pillow>=9.0.0
 PyYAML>=6.0
 feedparser>=6.0.0
 
+# Async support for concurrent downloads
+aiohttp>=3.8.0
+aiofiles>=0.8.0
+
 # Translation services
 deep-translator>=1.11.0

@@ -49,6 +49,8 @@ usage:
       command: "python main.py --download-only"
     - description: "使用自定义配置文件"
       command: "python main.py --config my_config.yaml"
+    - description: "使用并发下载（10个并发）"
+      command: "python main.py --concurrent-downloads 10"
 
 # 配置选项
 configuration:

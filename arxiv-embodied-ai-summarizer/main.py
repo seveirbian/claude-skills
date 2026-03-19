@@ -27,7 +27,8 @@ class ArXivSummarizer:
         self.output_manager = OutputManager()
 
     def run(self, days_back: int = None, max_results: int = None,
-            output_dir: str = None, download_only: bool = False) -> str:
+            output_dir: str = None, download_only: bool = False,
+            max_concurrent_downloads: int = None) -> str:
         """Run the complete summarization pipeline.
 
         Args:
@@ -35,6 +36,7 @@ class ArXivSummarizer:
             max_results: Maximum number of papers
             output_dir: Output directory (auto-generated if None)
             download_only: Only download PDFs without processing
+            max_concurrent_downloads: Max concurrent downloads (overrides config)
 
         Returns:
             Path to output directory
@@ -60,13 +62,22 @@ class ArXivSummarizer:
         # Step 2: Download PDFs
         print("\n📄 Downloading PDFs...")
         papers_dir = self.output_manager.get_papers_dir(output_dir)
-        pdf_paths = []
 
-        for paper in papers:
-            pdf_path = self.pdf_processor.download_pdf(paper, papers_dir)
-            if pdf_path:
-                pdf_paths.append(pdf_path)
-                paper['local_pdf_path'] = pdf_path
+        # Override concurrent download setting if provided
+        if max_concurrent_downloads is not None:
+            original_setting = self.pdf_processor.download_config.get('max_concurrent_downloads')
+            self.pdf_processor.download_config['max_concurrent_downloads'] = max_concurrent_downloads
+            print(f"📊 Using {max_concurrent_downloads} concurrent downloads (override)")
+
+        # Use concurrent downloads for better performance
+        pdf_paths = self.pdf_processor.download_pdfs_sync_wrapper(papers, papers_dir)
+
+        # Restore original setting if it was overridden
+        if max_concurrent_downloads is not None:
+            if original_setting is not None:
+                self.pdf_processor.download_config['max_concurrent_downloads'] = original_setting
+            else:
+                del self.pdf_processor.download_config['max_concurrent_downloads']
 
         print(f"✅ Downloaded {len(pdf_paths)} PDFs")
 
@@ -192,6 +203,13 @@ def main():
         help="Path to configuration file"
     )
 
+    parser.add_argument(
+        '--concurrent-downloads', '-c',
+        type=int,
+        default=None,
+        help="Maximum number of concurrent downloads (overrides config)"
+    )
+
     args = parser.parse_args()
 
     try:
@@ -208,7 +226,8 @@ def main():
             days_back=args.days_back,
             max_results=args.max_results,
             output_dir=args.output_dir,
-            download_only=args.download_only
+            download_only=args.download_only,
+            max_concurrent_downloads=args.concurrent_downloads
         )
 
         print(f"\n📁 Results saved to: {output_dir}")

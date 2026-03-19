@@ -4,7 +4,11 @@ import os
 import requests
 import fitz  # PyMuPDF
 import time
-from typing import List, Dict, Tuple
+import asyncio
+import aiohttp
+import aiofiles
+from concurrent.futures import ThreadPoolExecutor
+from typing import List, Dict, Tuple, Optional
 from pathlib import Path
 
 from .config import config
@@ -69,6 +73,157 @@ class PDFProcessor:
         except Exception as e:
             print(f"❌ Failed to download PDF {filename}: {e}")
             return None
+
+    async def download_pdf_async(self, session: aiohttp.ClientSession, paper: Dict,
+                                output_dir: str, semaphore: asyncio.Semaphore) -> Optional[str]:
+        """Download PDF asynchronously from ArXiv.
+
+        Args:
+            session: aiohttp client session
+            paper: Paper metadata dict
+            output_dir: Output directory
+            semaphore: Semaphore for concurrency control
+
+        Returns:
+            Path to downloaded PDF or None if failed
+        """
+        async with semaphore:  # Control concurrency
+            pdf_url = paper['pdf_url']
+            filename = f"{paper['id']}.pdf"
+            file_path = os.path.join(output_dir, filename)
+
+            if os.path.exists(file_path):
+                print(f"PDF already exists: {filename}")
+                return file_path
+
+            headers = {
+                'User-Agent': self.download_config.get('user_agent', 'ArXiv-Summarizer-Bot/1.0')
+            }
+
+            timeout = aiohttp.ClientTimeout(total=self.download_config.get('timeout', 30))
+            retry_attempts = self.download_config.get('retry_attempts', 3)
+            rate_limit_delay = self.download_config.get('rate_limit_delay', 0.5)
+
+            for attempt in range(retry_attempts):
+                try:
+                    print(f"📥 Downloading PDF: {filename} (attempt {attempt + 1})")
+
+                    async with session.get(pdf_url, headers=headers, timeout=timeout) as response:
+                        response.raise_for_status()
+
+                        # Create temporary file path to avoid partial downloads
+                        temp_file_path = f"{file_path}.tmp"
+
+                        async with aiofiles.open(temp_file_path, 'wb') as f:
+                            chunk_size = self.download_config.get('chunk_size', 8192)
+                            async for chunk in response.content.iter_chunked(chunk_size):
+                                await f.write(chunk)
+
+                        # Rename temp file to final file
+                        os.rename(temp_file_path, file_path)
+
+                        print(f"✅ Downloaded: {filename}")
+
+                        # Rate limiting between downloads
+                        if rate_limit_delay > 0:
+                            await asyncio.sleep(rate_limit_delay)
+
+                        return file_path
+
+                except Exception as e:
+                    print(f"❌ Download attempt {attempt + 1} failed for {filename}: {e}")
+                    # Clean up temp file if it exists
+                    temp_file_path = f"{file_path}.tmp"
+                    if os.path.exists(temp_file_path):
+                        os.remove(temp_file_path)
+
+                    if attempt < retry_attempts - 1:
+                        await asyncio.sleep(2)  # Wait before retry
+
+            print(f"❌ All download attempts failed for {filename}")
+            return None
+
+    async def download_pdfs_concurrently(self, papers: List[Dict], output_dir: str) -> List[str]:
+        """Download multiple PDFs concurrently.
+
+        Args:
+            papers: List of paper metadata dicts
+            output_dir: Output directory
+
+        Returns:
+            List of successful download paths
+        """
+        if not papers:
+            return []
+
+        max_concurrent = self.download_config.get('max_concurrent_downloads', 5)
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        # Use custom connector with connection limits
+        connector = aiohttp.TCPConnector(
+            limit=max_concurrent * 2,  # Total connection pool size
+            limit_per_host=max_concurrent,  # Per-host connection limit
+            ttl_dns_cache=300,  # DNS cache TTL
+            use_dns_cache=True,
+        )
+
+        timeout = aiohttp.ClientTimeout(
+            total=self.download_config.get('timeout', 30),
+            connect=10  # Connection timeout
+        )
+
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
+            # Create download tasks
+            tasks = [
+                self.download_pdf_async(session, paper, output_dir, semaphore)
+                for paper in papers
+            ]
+
+            print(f"📥 Starting concurrent download of {len(papers)} PDFs (max concurrent: {max_concurrent})")
+
+            # Execute downloads with progress tracking
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Process results
+            successful_paths = []
+            failed_count = 0
+
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    print(f"❌ Download failed for {papers[i]['id']}: {result}")
+                    failed_count += 1
+                elif result is not None:
+                    successful_paths.append(result)
+                    # Update paper with local path
+                    papers[i]['local_pdf_path'] = result
+                else:
+                    failed_count += 1
+
+            print(f"✅ Download completed: {len(successful_paths)} successful, {failed_count} failed")
+            return successful_paths
+
+    def download_pdfs_sync_wrapper(self, papers: List[Dict], output_dir: str) -> List[str]:
+        """Synchronous wrapper for async download function.
+
+        Args:
+            papers: List of paper metadata dicts
+            output_dir: Output directory
+
+        Returns:
+            List of successful download paths
+        """
+        try:
+            # Check if we're already in an event loop
+            loop = asyncio.get_running_loop()
+            # If we're in a loop, run in a thread pool
+            with ThreadPoolExecutor() as executor:
+                future = executor.submit(
+                    lambda: asyncio.run(self.download_pdfs_concurrently(papers, output_dir))
+                )
+                return future.result()
+        except RuntimeError:
+            # No running loop, create a new one
+            return asyncio.run(self.download_pdfs_concurrently(papers, output_dir))
 
     def extract_images(self, pdf_path: str, paper_id: str, output_dir: str) -> List[str]:
         """Extract architecture figures from PDF.
