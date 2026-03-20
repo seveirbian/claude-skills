@@ -1,0 +1,206 @@
+# ArXiv Embodied AI Summarizer Configuration
+
+# ArXiv Search Configuration
+arxiv:
+  base_url: "http://export.arxiv.org/api/query"
+  search_categories:
+    - "cs.RO"  # Robotics
+    - "cs.AI"  # Artificial Intelligence
+  search_terms:
+    - "embodied"
+    - "embodied ai"
+    - "embodied intelligence"
+    - "robot learning"
+    - "manipulation"
+    - "mobile manipulation"
+    - "sim-to-real"
+    - "reinforcement learning"
+    - "imitation learning"
+    - "multimodal"
+    - "vision-language"
+  default_days_back: 1
+  default_max_results: 50
+  rate_limit_delay: 1.0
+
+# Senior Researchers in Embodied AI and Robotics (2024 Updated)
+# 研究者层级分类：顶尖学者具有国际领导地位，重要学者在特定领域有显著贡献
+top_tier_researchers:
+  # === 国际顶尖研究者 (🌟 标记) ===
+  "Chelsea Finn": "Stanford University"        # Few-shot learning, Meta-learning 领军者
+  "Sergey Levine": "UC Berkeley"               # Deep RL, Robot Learning 奠基人
+  "Jiajun Wu": "Stanford University"           # 3D Vision, Physics Simulation 新星
+  "Andy Zeng": "Google DeepMind"               # RT-1/RT-2 机器人大模型先驱
+  "Deepak Pathak": "CMU"                       # Curiosity-driven Learning 开创者
+  "Yuke Zhu": "UT Austin"                      # Embodied AI, Manipulation 专家
+  "Dieter Fox": "University of Washington"     # SLAM, Mobile Robotics 权威
+  "Shuran Song": "Columbia University"         # 3D Vision, Manipulation 领军者
+  "Fei Xia": "Google DeepMind"                 # Embodied AI, Simulation 专家
+  "Jim Fan": "NVIDIA"                          # Foundation Models, MineDojo 创新者
+
+senior_researchers:
+  # === 重要学术研究者 ===
+  "Li Fei-Fei": "Stanford University"          # Computer Vision, AI Ethics
+  "Abhinav Gupta": "CMU"                       # Visual Learning
+  "Jie Tan": "Google DeepMind"                 # Sim-to-Real Transfer
+  "Andrej Karpathy": "Former Tesla"            # Computer Vision Director (前)
+
+  # === 中国具身AI领域重要研究者 ===
+  "Cewu Lu": "Shanghai Jiao Tong University"  # 机器人感知与操作
+  "He Wang": "Peking University"              # 机器人学习、强化学习
+  "Shanghang Zhang": "Peking University"      # 深度强化学习、机器人控制
+
+# Translation Configuration
+translation:
+  enabled: true
+  target_language: "zh-CN"  # Google Translator uses zh-CN for Chinese Simplified
+  chunk_size: 1000
+  services:
+    - "google"
+    - "microsoft"
+    - "mymemory"
+  retry_attempts: 3
+  delay_between_requests: 1.0
+
+  # Service-specific language mappings
+  language_mappings:
+    google: "zh-CN"      # Chinese (Simplified)
+    microsoft: "zh-Hans" # Microsoft uses zh-Hans
+    mymemory: "zh-CN"    # MyMemory uses zh-CN
+
+# PDF Processing Configuration
+pdf:
+  download:
+    timeout: 30
+    retry_attempts: 3
+    user_agent: "ArXiv-Summarizer-Bot/1.0"
+    # Concurrent download settings
+    max_concurrent_downloads: 5
+    rate_limit_delay: 0.5  # seconds between downloads per worker
+    chunk_size: 8192
+
+  image_extraction:
+    enabled: true
+    high_resolution: true
+    zoom_factor: 3.0
+    min_image_size: [80, 80]
+    architecture_focus: true
+
+    # Figure keywords for detection
+    figure_keywords:
+      high_value:
+        - "overview"
+        - "architecture"
+        - "framework"
+        - "pipeline"
+        - "workflow"
+        - "system design"
+        - "model architecture"
+        - "network structure"
+        - "approach"
+        - "method overview"
+        - "proposed method"
+
+      general:
+        - "figure"
+        - "fig"
+        - "diagram"
+        - "illustration"
+        - "structure"
+
+      negative:
+        - "experiment"
+        - "result"
+        - "performance"
+        - "comparison"
+        - "evaluation"
+        - "error"
+        - "accuracy"
+        - "precision"
+        - "recall"
+        - "score"
+        - "metric"
+        - "table"
+        - "chart"
+        - "graph"
+        - "plot"
+        - "curve"
+        - "distribution"
+        - "references"
+        - "acknowledgment"
+        - "bibliography"
+        - "appendix"
+
+# Analysis Configuration
+analysis:
+  paper:
+    extract_problem: true
+    extract_method: true
+    extract_highlights: true
+    max_summary_length: 2000
+
+  # Keywords for analysis
+  keywords:
+    problem_indicators:
+      - "problem"
+      - "challenge"
+      - "limitation"
+      - "difficulty"
+      - "issue"
+      - "bottleneck"
+
+    method_indicators:
+      - "approach"
+      - "method"
+      - "algorithm"
+      - "technique"
+      - "framework"
+      - "model"
+      - "architecture"
+
+    highlight_indicators:
+      - "novel"
+      - "new"
+      - "first"
+      - "significant"
+      - "improvement"
+      - "achieve"
+      - "outperform"
+      - "state-of-the-art"
+
+# Output Configuration
+output:
+  directory_pattern: "arxiv_eai_daily_{timestamp}"
+  timestamp_format: "%Y%m%d_%H%M"
+
+  subdirectories:
+    papers: "papers"
+    summaries: "summaries"
+    images: "images"
+    translations: "translations"
+
+  file_naming:
+    paper_pattern: "{arxiv_id}.pdf"
+    summary_pattern: "{arxiv_id}_summary.md"
+    image_pattern: "{arxiv_id}_{type}_{index}.png"
+
+  formats:
+    summary: "markdown"
+    include_images: true
+    include_translations: true
+    chinese_summary: true
+
+# Claude AI Analysis Configuration
+# 需要设置环境变量 ANTHROPIC_API_KEY
+claude:
+  model: "claude-opus-4-6"    # 使用最强模型进行深度分析
+  max_tokens: 2048
+  enabled: true               # 自动检测 ANTHROPIC_API_KEY，未设置时自动降级
+  # 分析结果缓存目录（避免重复调用 API）
+  analyses_subdir: "analyses"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_enabled: true
+  console_enabled: true

@@ -1,0 +1,3 @@
+标题: 纪念品技能：让特工设计特工
+
+摘要: 我们介绍 \emph{Memento-Skills}，一个通才的、可持续学习的 LLM 代理系统，其功能相当于 \emph{代理设计代理}：它通过经验自主构建、适应和改进特定任务的代理。该系统建立在基于记忆的强化学习框架上，具有 \emph{状态提示}，其中可重用技能（存储为结构化 Markdown 文件）充当持久的、不断发展的记忆。这些技能对行为和上下文进行编码，使代理能够在交互中传播知识。   从简单的基本技能（如网络搜索和终端操作）开始，代理通过 \emph{Memento~2}~\cite{wang2025memento2} 中引入的 \emph{Read--Write Reflective Learning} 机制不断改进。 在 \emph{read} 阶段，行为可训练技能路由器根据当前状态提示选择最相关的技能；在\emph{写入}阶段，代理根据新的经验更新和扩展其技能库。这种闭环设计使得\emph{无需更新LLM参数即可持续学习}，因为所有适应都是通过外化技能和提示的演变来实现的。   与之前依赖人工设计代理的方法不同，Memento-Skills 使多面手代理能够为新任务\emph{端到端设计代理}。通过迭代技能生成和细化，系统逐步提高自身能力。 \emph{General AI Assistants} 基准测试和 \emph{Humanity's Last Exam} 的实验展示了持续的收益，总体准确率分别实现了 26.2% 和 116.2% 的相对改进。代码可在 https://github.com/Memento-Teams/Memento-Skills 获取。
